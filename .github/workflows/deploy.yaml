@@ -1,16 +1,33 @@
-name: Deploy Netlify Site
+name: Manual Deploy to Netlify
 
 on:
   push:
     branches: [main]
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
 
-      - name: Trigger Netlify Build Hook
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm ci # or yarn install
+
+      - name: Build your project
+        run: npm run build # or your specific build command
+
+      - name: Install Netlify CLI
+        run: npm install -g netlify-cli
+
+      - name: Deploy to Netlify
         run: |
-          curl -X POST -H "Content-Type: application/json" -d '{}' "${{ secrets.NETLIFY_BUILD_HOOK }}"
+          netlify deploy --dir=dist --prod --auth=$NETLIFY_AUTH_TOKEN --site=$NETLIFY_SITE_ID
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
